@@ -1,0 +1,1225 @@
+openapi: 3.0.0
+info:
+  title: LXP API
+  description: API for Learning Experience Platform (LXP)
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api
+    description: Local Development Server
+paths:
+  /example:
+    get:
+      summary: Example API endpoint
+      description: Returns a simple success message
+      tags:
+        - Utilities
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: success
+
+  /register:
+    post:
+      summary: Register a new user
+      description: Creates a new user account
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User registered successfully
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+                    example: 1|laravel_sanctum_9CRoLGJQGgwZ4iGwKEnacbvKfLBdIULJyRMTesw7fa7eb44f
+        '422':
+          description: Validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+                
+  /login:
+    post:
+      summary: User login
+      description: Authenticates a user and returns a token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Login successful
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+                    example: 1|laravel_sanctum_9CRoLGJQGgwZ4iGwKEnacbvKfLBdIULJyRMTesw7fa7eb44f
+        '422':
+          description: Validation errors or invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+                
+  /logout:
+    post:
+      summary: User logout
+      description: Revokes the user's authentication token
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logged out successfully
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+                    
+  /user:
+    get:
+      summary: Get authenticated user
+      description: Returns the currently authenticated user's information
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+  /courses:
+    get:
+      summary: Get all courses
+      description: Returns a list of all courses
+      tags:
+        - Courses
+      responses:
+        '200':
+          description: A list of courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+    post:
+      summary: Create a new course
+      description: Creates a new course with the provided data
+      tags:
+        - Courses
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseRequest'
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                instructor_id:
+                  type: integer
+                  description: ID of the instructor
+                title:
+                  type: string
+                  description: Course title
+                caption:
+                  type: string
+                  description: Course caption
+                description:
+                  type: string
+                  description: Course description
+                image:
+                  type: string
+                  format: binary
+                  description: Course cover image
+              required:
+                - instructor_id
+                - title
+                - caption
+                - description
+      responses:
+        '201':
+          description: Course created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Course'
+                  - type: object
+                    properties:
+                      status:
+                        type: string
+                        example: success
+                      message:
+                        type: string
+                        example: Course created successfully
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: This action is unauthorized.
+  /courses/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Course ID
+    get:
+      summary: Get a specific course
+      description: Returns a specific course by ID
+      tags:
+        - Courses
+      responses:
+        '200':
+          description: Course details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+        '404':
+          description: Course not found
+    put:
+      summary: Update a course
+      description: Updates a course with the provided data
+      tags:
+        - Courses
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseUpdateRequest'
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                instructor_id:
+                  type: integer
+                  description: ID of the instructor
+                title:
+                  type: string
+                  description: Course title
+                caption:
+                  type: string
+                  description: Course caption
+                description:
+                  type: string
+                  description: Course description
+                image:
+                  type: string
+                  format: binary
+                  description: Course cover image
+      responses:
+        '200':
+          description: Course updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Course'
+                  - type: object
+                    properties:
+                      status:
+                        type: string
+                        example: success
+                      message:
+                        type: string
+                        example: Course updated successfully
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: This action is unauthorized.
+        '404':
+          description: Course not found
+    delete:
+      summary: Delete a course
+      description: Deletes a specific course by ID
+      tags:
+        - Courses
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Course deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Course deleted successfully
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: This action is unauthorized.
+        '404':
+          description: Course not found
+  /chapters:
+    get:
+      summary: Get all chapters
+      description: Returns a list of all chapters, can be filtered by course_id
+      tags:
+        - Chapters
+      parameters:
+        - name: course_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Filter chapters by course ID
+      responses:
+        '200':
+          description: A list of chapters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chapter'
+    post:
+      summary: Create a new chapter
+      description: Creates a new chapter with the provided data
+      tags:
+        - Chapters
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChapterRequest'
+      responses:
+        '201':
+          description: Chapter created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Chapter'
+                  - type: object
+                    properties:
+                      status:
+                        type: string
+                        example: success
+                      message:
+                        type: string
+                        example: Chapter created successfully
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: This action is unauthorized.
+  /chapters/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Chapter ID
+    get:
+      summary: Get a specific chapter
+      description: Returns a specific chapter by ID
+      tags:
+        - Chapters
+      responses:
+        '200':
+          description: Chapter details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chapter'
+        '404':
+          description: Chapter not found
+    put:
+      summary: Update a chapter
+      description: Updates a chapter with the provided data
+      tags:
+        - Chapters
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChapterUpdateRequest'
+      responses:
+        '200':
+          description: Chapter updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Chapter'
+                  - type: object
+                    properties:
+                      status:
+                        type: string
+                        example: success
+                      message:
+                        type: string
+                        example: Chapter updated successfully
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: This action is unauthorized.
+        '404':
+          description: Chapter not found
+    delete:
+      summary: Delete a chapter
+      description: Deletes a specific chapter by ID
+      tags:
+        - Chapters
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Chapter deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Chapter deleted successfully
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: This action is unauthorized.
+        '404':
+          description: Chapter not found
+  /courses/{course}/chapters:
+    parameters:
+      - name: course
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Course ID
+    get:
+      summary: Get chapters for a specific course
+      description: Returns a list of chapters for the specified course
+      tags:
+        - Chapters
+      responses:
+        '200':
+          description: A list of chapters for the course
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chapter'
+        '404':
+          description: Course not found
+          
+  /topics:
+    get:
+      summary: Get all topics
+      description: Returns a list of all topics, can be filtered by chapter_id
+      tags:
+        - Topics
+      parameters:
+        - name: chapter_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Filter topics by chapter ID
+      responses:
+        '200':
+          description: A list of topics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Topic'
+    post:
+      summary: Create a new topic
+      description: Creates a new topic with the provided data
+      tags:
+        - Topics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopicRequest'
+      responses:
+        '201':
+          description: Topic created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Topic'
+                      status:
+                        type: string
+                        example: success
+                      message:
+                        type: string
+                        example: Topic created successfully
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: This action is unauthorized.
+  
+  /topics/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Topic ID
+    get:
+      summary: Get a specific topic
+      description: Returns a specific topic by ID
+      tags:
+        - Topics
+      responses:
+        '200':
+          description: Topic details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topic'
+        '404':
+          description: Topic not found
+    put:
+      summary: Update a topic
+      description: Updates a topic with the provided data
+      tags:
+        - Topics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopicUpdateRequest'
+      responses:
+        '200':
+          description: Topic updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Topic'
+                      status:
+                        type: string
+                        example: success
+                      message:
+                        type: string
+                        example: Topic updated successfully
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: This action is unauthorized.
+        '404':
+          description: Topic not found
+    delete:
+      summary: Delete a topic
+      description: Deletes a specific topic by ID
+      tags:
+        - Topics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Topic deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Topic deleted successfully
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: This action is unauthorized.
+        '404':
+          description: Topic not found
+          
+  /chapters/{chapter}/topics:
+    parameters:
+      - name: chapter
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Chapter ID
+    get:
+      summary: Get topics for a specific chapter
+      description: Returns a list of topics for the specified chapter
+      tags:
+        - Topics
+      responses:
+        '200':
+          description: A list of topics for the chapter
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Topic'
+        '404':
+          description: Chapter not found
+  
+  /topics/sort-order:
+    put:
+      summary: Update topics sort order
+      description: Updates the sort order of multiple topics
+      tags:
+        - Topics
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                topics:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        description: Topic ID
+                      sort_order:
+                        type: integer
+                        description: New sort order for the topic
+                    required:
+                      - id
+                      - sort_order
+              required:
+                - topics
+      responses:
+        '200':
+          description: Topics sort order updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Topic sort order updated successfully
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Unauthenticated
+        '403':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: This action is unauthorized.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+        password_confirmation:
+          type: string
+          format: password
+          example: password123
+      required:
+        - name
+        - email
+        - password
+        - password_confirmation
+    
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+      required:
+        - email
+        - password
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: John Doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        email_verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: The email field is required. The password field is required.
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email:
+              - The email field is required.
+            password:
+              - The password field is required.
+    
+    Course:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        instructor_id:
+          type: integer
+          example: 1
+        instructor:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: John Doe
+        title:
+          type: string
+          example: Introduction to Web Development
+        caption:
+          type: string
+          example: Learn the basics of web development
+        description:
+          type: string
+          example: This course covers HTML, CSS, and JavaScript fundamentals.
+        image:
+          type: string
+          format: uri
+          example: http://localhost:8000/storage/media/1/image.jpg
+        topic_count:
+          type: integer
+          example: 10
+        lesson_count:
+          type: integer
+          example: 8
+        practice_count:
+          type: integer
+          example: 2
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    CourseRequest:
+      type: object
+      properties:
+        instructor_id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Introduction to Web Development
+        caption:
+          type: string
+          example: Learn the basics of web development
+        description:
+          type: string
+          example: This course covers HTML, CSS, and JavaScript fundamentals.
+      required:
+        - instructor_id
+        - title
+        - caption
+        - description
+    CourseUpdateRequest:
+      type: object
+      properties:
+        instructor_id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Introduction to Web Development
+        caption:
+          type: string
+          example: Learn the basics of web development
+        description:
+          type: string
+          example: This course covers HTML, CSS, and JavaScript fundamentals.
+    Chapter:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        course_id:
+          type: integer
+          example: 1
+        course:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            title:
+              type: string
+              example: Introduction to Web Development
+        title:
+          type: string
+          example: HTML Basics
+        topics:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              title:
+                type: string
+              type:
+                type: string
+        topics_count:
+          type: integer
+          example: 5
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ChapterRequest:
+      type: object
+      properties:
+        course_id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: HTML Basics
+      required:
+        - course_id
+        - title
+    ChapterUpdateRequest:
+      type: object
+      properties:
+        course_id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: HTML Basics
+
+    Topic:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        chapter_id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Introduction to HTML Tags
+        sort_order:
+          type: integer
+          example: 1
+        type:
+          type: string
+          enum: [lesson, practice]
+          example: lesson
+        chapter:
+          $ref: '#/components/schemas/Chapter'
+        lesson:
+          $ref: '#/components/schemas/Lesson'
+        practice:
+          $ref: '#/components/schemas/Practice'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    TopicRequest:
+      type: object
+      properties:
+        chapter_id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Introduction to HTML Tags
+        type:
+          type: string
+          enum: [lesson, practice]
+          example: lesson
+        sort_order:
+          type: integer
+          example: 1
+        children_type:
+          type: string
+          example: text
+        leave_after_submit:
+          type: boolean
+          example: false
+      required:
+        - chapter_id
+        - title
+        - type
+    
+    TopicUpdateRequest:
+      type: object
+      properties:
+        chapter_id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Introduction to HTML Tags
+        type:
+          type: string
+          enum: [lesson, practice]
+          example: lesson
+        sort_order:
+          type: integer
+          example: 1
+    
+    Lesson:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        topic_id:
+          type: integer
+          example: 1
+        content:
+          type: string
+          example: "<h1>Introduction to HTML</h1><p>HTML is the standard markup language for Web pages...</p>"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    Practice:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        topic_id:
+          type: integer
+          example: 2
+        instruction:
+          type: string
+          example: "Complete the following exercise..."
+        type:
+          type: string
+          example: "quiz"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time 
