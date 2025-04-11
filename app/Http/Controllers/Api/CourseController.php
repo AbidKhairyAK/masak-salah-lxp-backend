@@ -50,13 +50,7 @@ class CourseController extends Controller implements HasMiddleware
                 ->toMediaCollection('images');
         }
 
-        return (new CourseResource($course))
-            ->additional([
-                'status' => 'success',
-                'message' => 'Course created successfully'
-            ])
-            ->response()
-            ->setStatusCode(Response::HTTP_CREATED);
+        return new CourseResource($course);
     }
 
     /**
