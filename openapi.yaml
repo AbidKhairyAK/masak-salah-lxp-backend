@@ -375,6 +375,131 @@ paths:
                     example: This action is unauthorized.
         '404':
           description: Course not found
+  /courses/{course}/structure:
+    parameters:
+      - name: course
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Course ID
+    get:
+      summary: Get course structure
+      description: Returns the course structure with chapters and topics
+      tags:
+        - Courses
+      responses:
+        '200':
+          description: Course structure retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    title:
+                      type: string
+                      example: "Chapter 1: Introduction"
+                    topics:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          title:
+                            type: string
+                            example: "Getting Started"
+                          type:
+                            type: string
+                            enum: ["video", "pdf", "article"]
+                            example: "video"
+        '404':
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Course not found"
+  /topics/{topic}/content:
+    parameters:
+      - name: topic
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: Topic ID
+    get:
+      summary: Get topic content
+      description: Returns the topic content based on its type (video, pdf, or article)
+      tags:
+        - Topics
+      responses:
+        '200':
+          description: Topic content retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  title:
+                    type: string
+                    example: "Getting Started"
+                  lesson:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                        enum: ["video", "pdf", "article"]
+                        example: "video"
+                      video:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          video_url:
+                            type: string
+                            example: "https://example.com/video.mp4"
+                      pdf:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          pdf_url:
+                            type: string
+                            example: "https://example.com/document.pdf"
+                      article:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          content:
+                            type: string
+                            example: "Article content goes here..."
+        '404':
+          description: Topic not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Topic not found"
   /chapters:
     get:
       summary: Get all chapters
