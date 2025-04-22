@@ -24,15 +24,19 @@ class TopicContentController extends Controller
         if ($lesson) {
             $content = $lesson->children_model()->first();
             $lesson = [
+                'id' => $lesson->id,
                 'type' => $lesson->type,
                 $lesson->type => $content
             ];
         }
 
+        $practice = $topic->practice;
+
         return response()->json([
             'id' => $topic->id,
             'title' => $topic->title,
-            'lesson' => $lesson ?? null
+            'lesson' => $lesson ?? null,
+            'practice' => $practice ?? null,
         ]);
     }
 } 
