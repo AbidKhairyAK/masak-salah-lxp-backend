@@ -51,3 +51,4 @@ Route::put('topics/sort-order', [TopicController::class, 'updateSortOrder']);
 // New routes
 Route::get('/courses/{course}/structure', [CourseStructureController::class, 'show']);
 Route::get('/topics/{topic}/content', [TopicContentController::class, 'show']);
+Route::get('/topics/{topic}/navigation', [TopicContentController::class, 'navigation']);
